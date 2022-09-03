@@ -8,36 +8,39 @@ cgi = CGI.new
 
 puts <<'EOS'
 <form action="/cgi/memo/index.rb">
-    <input name="q">
+    <textarea name="memo"></textarea>
+    <input type="hidden" name="cmd" value="add">
     <button>Send</button>
 </form>
 EOS
 
 memoFile = 'memo.json'
 
-# ƒNƒGƒŠ‚ª‚ ‚Á‚½ê‡‚Ìˆ—
-if cgi['q']!='' then
-    content = {}
-    memoJson = {}
-    if File.file?(memoFile) then
-        memoJson = File.open(memoFile) do |file|
-            JSON.load(file)
-        end
-        content = {"contents" =>cgi['q']}
-        # memoJson[SecureRandom.uuid] = content
-        memoJson.store(SecureRandom.uuid, content)
-        open(memoFile, "w") do |file|
-            file.puts(JSON.pretty_generate(memoJson))
-        end
-    else
-        content = {"contents" =>cgi['q']}
-        memoJson[SecureRandom.uuid] = content
-        open(memoFile, "w") do |file|
-            file.puts(JSON.pretty_generate(memoJson))
+case cgi['cmd']
+when 'add' then
+    # ã‚¯ã‚¨ãƒªãŒã‚ã£ãŸå ´åˆã®å‡¦ç†
+    if cgi['memo']!='' then
+        content = {}
+        memoJson = {}
+        if File.file?(memoFile) then
+            memoJson = File.open(memoFile) do |file|
+                JSON.load(file)
+            end
+            content = {"contents" =>cgi['memo']}
+            # memoJson[SecureRandom.uuid] = content
+            memoJson.store(SecureRandom.uuid, content)
+            open(memoFile, "w") do |file|
+                file.puts(JSON.pretty_generate(memoJson))
+            end
+        else
+            content = {"contents" =>cgi['memo']}
+            memoJson[SecureRandom.uuid] = content
+            open(memoFile, "w") do |file|
+                file.puts(JSON.pretty_generate(memoJson))
+            end
         end
     end
 end
-
 
 if File.file?(memoFile) then
     memoJson = {}
@@ -49,7 +52,7 @@ pu = <<"EOS"
 EOS
     # puts memoJson
     memoJson.each{|key, value|
-        pu = pu + "#{value['contents']}<hr>"
+        pu = pu + "<p>#{value['contents'].gsub(/\n/, '<br>')}</p><hr>"
     }
 else
 pu = <<"EOS"
